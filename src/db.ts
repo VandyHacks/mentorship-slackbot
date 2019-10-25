@@ -14,7 +14,7 @@ import {
 
 import DB from 'mongo';
 
-// if ((await this.db()).SlackSessions.value() == null) {
+// if (await this.SlackSessions().value() == null) {
 //   db.set("sessions", {}).write();
 // }
 
@@ -27,17 +27,20 @@ export default class Store {
     this.online = 0
   }
   // connects once
-  db = async () =>
-    await new DB().collections
+  SlackSessions = async () =>
+    (await new DB().collections).SlackSessions
+
+  SlackMentors = async () =>
+    (await new DB().collections).SlackMentors
 
   public async getSession(user: UserID): Promise<Session> {
-    const sessions = (await this.db()).SlackSessions
+    const sessions = await this.SlackSessions()
     // @ts-ignore
     return sessions.find({ id: user }).toArray()
   }
 
   public async getSessionsToBump() {
-    const sessions = (await this.db()).SlackSessions
+    const sessions = await this.SlackSessions()
       // @ts-ignore
       .filter(
         (session: Session) =>
@@ -68,13 +71,13 @@ export default class Store {
       // eslint-disable-next-line @typescript-eslint/camelcase
       last_updated: new Date().toString()
     };
-    const sessions = (await this.db()).SlackSessions
+    const sessions = await this.SlackSessions()
     const updated = sessions.updateOne({ id: user }, session)
     return updated;
   }
 
   public async clearSession(user: UserID) {
-    const sessions = (await this.db()).SlackSessions
+    const sessions = await this.SlackSessions()
     return sessions
       // @ts-ignore
       .get(user)
@@ -86,13 +89,13 @@ export default class Store {
   }
 
   public async getUserIdByThreadTs(threadTs: TS): Promise<UserID | undefined> {
-    const sessions = (await this.db()).SlackSessions
+    const sessions = await this.SlackSessions()
     const users = await sessions.find({ ts: threadTs }).toArray()
     return users.length > 0 ? users[0].id : undefined
   }
 
   public async getMentors = () => {
-    const mentors = (await this.db()).SlackMentors
+    const mentors = await this.SlackMentors()
     return mentors.find({}).toArray();
   }
 
@@ -101,7 +104,7 @@ export default class Store {
     db.set("mentors", mentors).write();
 
   public async getMentor = (user: UserID): Promise<Mentor | null> => {
-    const mentors = (await this.db()).SlackMentors
+    const mentors = await this.SlackMentors()
     return mentors.findOne({ id: user });
   }
 
@@ -111,7 +114,7 @@ export default class Store {
       [key: string]: boolean;
     }
   ) {
-    const mentors = (await this.db()).SlackMentors
+    const mentors = await this.SlackMentors()
     return mentors
       // @ts-ignore
       .get(user)

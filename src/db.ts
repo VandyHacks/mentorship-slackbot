@@ -39,9 +39,10 @@ export default class Store {
     return sessions.find({ id: user }).toArray()
   }
 
-  public async getSessionsToBump() {
-    const sessions = await this.SlackSessions()
-      // @ts-ignore
+  public async getSessionsToBump(): Promise<Session[]> {
+    let sessions = await this.SlackSessions()
+    // @ts-ignore
+    let all = sessions.find({}).toArray()
       .filter(
         (session: Session) =>
           isActive(session) &&
@@ -49,8 +50,8 @@ export default class Store {
           new Date(session.last_updated).getTime() <
           new Date().getTime() - 1000 * 60 * 10
       )
-      .value() as ActiveSession[];
-    for (const session of sessions) {
+      .toArray() as ActiveSession[];
+    for (const session of filtered) {
       session.
         // @ts-ignore
         .get(session.id)
@@ -64,28 +65,28 @@ export default class Store {
     user: UserID,
     newSession: T
   ): Promise<Session & T> {
-    const session = {
-      ...(this.getSession(user) || {}),
+    const sessions = await this.SlackSessions()
+    const newData = {
       ...newSession,
-      id: user,
       // eslint-disable-next-line @typescript-eslint/camelcase
       last_updated: new Date().toString()
-    };
-    const sessions = await this.SlackSessions()
-    const updated = sessions.updateOne({ id: user }, session)
-    return updated;
+    }
+    // findOneAndUpdate returns back doc
+    return await sessions.findOneAndUpdate(
+      { id: user },
+      { $set: newData },
+      { returnOriginal: false }) as Promise<Session & T>
   }
 
-  public async clearSession(user: UserID) {
+  public async clearSession(user: UserID): Promise<void> {
     const sessions = await this.SlackSessions()
-    return sessions
-      // @ts-ignore
-      .get(user)
-      .set("ts", undefined)
-      .set("mentor", undefined)
-      .set("mentor_claim_ts", undefined)
-      .set("group_id", undefined)
-      .write();
+    const reset = {
+      ts: undefined,
+      mentor: undefined,
+      mentor_claim_ts: undefined,
+      group_id: undefined
+    }
+    sessions.updateOne({ id: user }, { $set: reset })
   }
 
   public async getUserIdByThreadTs(threadTs: TS): Promise<UserID | undefined> {
@@ -122,12 +123,8 @@ export default class Store {
       .write();
   }
 
-  public async getOnline() { return this.online }
-
-  public async setOnline(count: number) { this.online = count }
-
-  public async getCreated() { return this.created }
-
-  public async bumpCreated() { this.created += 1 }
-
-} 
+  public getOnline = () => this.online
+  public setOnline = (count: number) => this.online = count
+  public getCreated = () => this.created
+  public bumpCreated = () => this.created += 1
+}

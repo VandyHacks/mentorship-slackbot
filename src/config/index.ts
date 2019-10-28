@@ -12,7 +12,7 @@ export default {
   // Name of your event
   EVENT_NAME: "VandyHacks VI",
   // Location of mentor hub
-  MENTOR_HUB: "E7 CND",
+  MENTOR_HUB: "1st Floor Wond'ry, past the Hardware Table",
 
   // Channel ID of your private "mentors" slack group
   MENTOR_CHANNEL: MENTOR_CHANNEL as string,

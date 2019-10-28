@@ -3,7 +3,7 @@ import { buildSimpleBlock, buildRequestBlock, send } from "./utils";
 
 export function introduce(session: ClaimedSession) {
   const { blocks } = buildRequestBlock(session, "intro");
-  const introText = `👋 Hello <@${session.id}>! Your session has been claimed by <@${session.mentor}>, our resident expert of Hacking, Northing, and everything in-between. As a reminder, your request was as follows:`;
+  const introText = `👋 Hello <@${session.id}>! Your session has been claimed by <@${session.mentor}>, our resident expert of Hacking. As a reminder, your request was as follows:`;
   return send({
     channel: session.group_id,
     ...buildSimpleBlock(introText, blocks)

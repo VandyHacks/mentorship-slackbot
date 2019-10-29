@@ -50,8 +50,7 @@ export default {
     vr: "Virtual Reality",
     design: "Design",
     hardware: "Hardware",
-    data: "Data",
-    machine_learning: "Machine Learning"
+    data_ml: "Data/Machine Learning"
     // add more... (or take some away)
   }
 };

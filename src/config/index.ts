@@ -49,7 +49,9 @@ export default {
     ios: "iOS",
     vr: "Virtual Reality",
     design: "Design",
-    hardware: "Hardware"
+    hardware: "Hardware",
+    data: "Data",
+    machine_learning: "Machine Learning"
     // add more... (or take some away)
   }
 };

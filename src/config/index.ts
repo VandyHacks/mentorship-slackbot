@@ -36,7 +36,7 @@ export default {
 
   // Event start time (when the bot should welcome people and start posting stats)
   // ISO 8601
-  EVENT_START: "2019-010-23T21:00:00-0400",
+  EVENT_START: "2019-10-23T21:00:00-0400",
   // Event end time (when the bot should stop)
   // ISO 8601
   EVENT_END: "2019-11-05T12:00:00-0400",

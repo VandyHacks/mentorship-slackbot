@@ -4,13 +4,7 @@ import * as Message from "actions/message";
 import { webClient } from "clients";
 import { handle, swallow } from "utils";
 
-import {
-  bumpCreated,
-  getSession,
-  clearSession,
-  getUserIdByThreadTs,
-  updateSession
-} from "db";
+import db from "db";
 
 import {
   UserID,
@@ -24,6 +18,14 @@ import {
   coerceEmpty,
   isClaimed
 } from "typings";
+
+const {
+  bumpCreated,
+  getSession,
+  clearSession,
+  getUserIdByThreadTs,
+  updateSession
+} = db;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Respond = (message: any) => Promise<unknown>;
@@ -49,9 +51,9 @@ interface DialogPayload extends ActionPayload {
   submission: Submission;
 }
 
-function needMentor(payload: MessagePayload, respond: Respond) {
+async function needMentor(payload: MessagePayload, respond: Respond) {
   // check for existing session
-  const session = getSession(payload.user.id);
+  const session = await getSession(payload.user.id);
   if (isActive(session)) {
     return Message.Mentee.alreadyActive(respond);
   } else {
@@ -63,38 +65,38 @@ function needMentor(payload: MessagePayload, respond: Respond) {
   }
 }
 
-function mentorRequest(payload: DialogPayload) {
+async function mentorRequest(payload: DialogPayload) {
   const { user, channel, submission, state } = payload;
-  const session = updateSession(user.id, {
+  const session = await updateSession(user.id, {
     username: user.name,
     channel: channel.id,
     mentee_ts: state,
     submission
   });
   bumpCreated();
-  return Message.Mentors.sendRequest(session).then(({ ts }) =>
+  return Message.Mentors.sendRequest(session).then(async ({ ts }) =>
     Message.Mentee.updateRequest(
-      coerceActive(updateSession(user.id, { ts: ts as TS }))
+      coerceActive(await updateSession(user.id, { ts: ts as TS }))
     )
   );
 }
 
-function cancelRequest({ user: { id } }: MessagePayload) {
-  const session = coerceActive(getSession(id), true);
+async function cancelRequest({ user: { id } }: MessagePayload) {
+  const session = coerceActive(await getSession(id), true);
   return Promise.all([
     Message.Mentee.updateRequest(session, "canceled"),
     Message.Mentors.updateRequest(session, "canceled"),
-    Message.Mentee.needMentor(coerceEmpty(clearSession(id)))
+    Message.Mentee.needMentor(coerceEmpty(await clearSession(id)))
   ]);
 }
 
-function claimRequest(payload: MessagePayload) {
-  const userId = getUserIdByThreadTs(payload.message.ts);
+async function claimRequest(payload: MessagePayload) {
+  const userId = await getUserIdByThreadTs(payload.message.ts);
 
   if (userId === undefined)
     throw new Error(`Undefined user_id for ts '${payload.message.ts}'`);
 
-  const { mentor } = updateSession(userId, {
+  const { mentor } = await updateSession(userId, {
     mentor: payload.user.id
   });
 
@@ -104,8 +106,8 @@ function claimRequest(payload: MessagePayload) {
         users: [userId, mentor].join(",")
       })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .then(({ channel }: any) => {
-        const session = updateSession(userId, {
+      .then(async ({ channel }: any) => {
+        const session = await updateSession(userId, {
           group_id: channel.id
         }) as ClaimedSession;
         return Promise.all([
@@ -115,9 +117,9 @@ function claimRequest(payload: MessagePayload) {
           Message.Mentors.updateRequest(session),
           // let the mentor know
           Message.Mentors.claimControls(session)
-        ]).then(([, , { ts, channel }]) =>
+        ]).then(async ([, , { ts, channel }]) =>
           coerceClaimed(
-            updateSession(userId, {
+            await updateSession(userId, {
               mentor_claim_ts: ts as TS,
               mentor_channel: channel as ChannelID
             })
@@ -127,9 +129,9 @@ function claimRequest(payload: MessagePayload) {
   );
 }
 
-function deleteRequest(payload: MessagePayload) {
+async function deleteRequest(payload: MessagePayload) {
   const userId = payload.actions[0].value;
-  const session = coerceActive(getSession(userId), true);
+  const session = coerceActive(await getSession(userId), true);
   return Promise.all([
     // Update mentors channel that it has been deleted
     Message.Mentors.updateRequest(session, "deleted"),
@@ -149,11 +151,11 @@ function deleteRequest(payload: MessagePayload) {
   ]);
 }
 
-function surrenderRequest(payload: MessagePayload) {
+async function surrenderRequest(payload: MessagePayload) {
   const userId = payload.actions[0].value;
-  const session = coerceClaimed(getSession(userId));
+  const session = coerceClaimed(await getSession(userId));
   const newSession = coerceActive(
-    updateSession(userId, {
+    await updateSession(userId, {
       mentor_claim_ts: undefined,
       group_id: undefined,
       mentor: undefined
@@ -171,9 +173,9 @@ function surrenderRequest(payload: MessagePayload) {
   ]);
 }
 
-function completeRequest(payload: MessagePayload) {
+async function completeRequest(payload: MessagePayload) {
   const userId = payload.actions[0].value;
-  const session = coerceClaimed(getSession(userId));
+  const session = coerceClaimed(await getSession(userId));
   return Promise.all([
     // Update the controls for the mentor
     Message.Mentors.completeControls(session),
@@ -183,7 +185,7 @@ function completeRequest(payload: MessagePayload) {
     Message.Mentee.noSession(session),
     // Update the mentor channel to say it's complete
     Message.Session.complete(session)
-  ]).then(() => coerceEmpty(clearSession(userId)));
+  ]).then(async () => coerceEmpty(await clearSession(userId)));
 }
 
 export const bootstrap = (interactions: SlackMessageAdapter) => {

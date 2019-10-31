@@ -8,7 +8,7 @@ import {
 import config from "config";
 import { Session, ClaimedSession } from "typings";
 import { webClient } from "clients";
-import * as db from "db";
+import db from "db";
 
 const { chat } = webClient;
 
@@ -86,42 +86,42 @@ function buildRequestActions(session: RequestSession, context: RequestContext) {
       return [
         (session as ClaimedSession).group_id != null
           ? {
-              type: "context",
-              elements: [
-                {
-                  type: "mrkdwn",
-                  text: `Request claimed by <@${
-                    (session as ClaimedSession).mentor
+            type: "context",
+            elements: [
+              {
+                type: "mrkdwn",
+                text: `Request claimed by <@${
+                  (session as ClaimedSession).mentor
                   }>`
-                }
-              ]
-            }
+              }
+            ]
+          }
           : {
-              type: "actions",
-              elements: [
-                {
-                  action_id: "claim_request",
-                  type: "button",
-                  text: {
-                    type: "plain_text",
-                    text: `Claim`
-                  },
-                  style: "primary",
-                  value: "claim"
+            type: "actions",
+            elements: [
+              {
+                action_id: "claim_request",
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  text: `Claim`
                 },
-                {
-                  action_id: "delete_request",
-                  type: "button",
-                  text: {
-                    type: "plain_text",
-                    emoji: true,
-                    text: `Delete`
-                  },
-                  style: "danger",
-                  value: session.id
-                }
-              ]
-            }
+                style: "primary",
+                value: "claim"
+              },
+              {
+                action_id: "delete_request",
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  emoji: true,
+                  text: `Delete`
+                },
+                style: "danger",
+                value: session.id
+              }
+            ]
+          }
       ];
   }
 }
@@ -143,15 +143,15 @@ export function buildRequestBlock(
 
   const title = `Mentorship request from @${username}\nLocation: ${
     submission.location
-  }${
+    }${
     submission.skill != null
       ? `\nCategory: ${config.SKILLS[submission.skill]} ${
-          mentors.length > 0
-            ? `(${mentors.map(m => `<@${m}>`).join(", ")})`
-            : ""
-        }`
+      mentors.length > 0
+        ? `(${mentors.map(m => `<@${m}>`).join(", ")})`
+        : ""
+      }`
       : ""
-  }`;
+    }`;
 
   return {
     text: title + " " + submission.description,

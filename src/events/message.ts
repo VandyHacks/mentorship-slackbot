@@ -1,5 +1,5 @@
 import Config from "config";
-import * as db from "db";
+import db from "db";
 import { handle as handleErrors } from "utils";
 
 import * as Message from "actions/message";
@@ -18,7 +18,7 @@ interface Event {
   text: string;
   user: UserID;
 }
-const messageHandler = (event: Event) => {
+const messageHandler = async (event: Event) => {
   // ignore bot messages
   if (
     event.bot_id != null ||
@@ -57,7 +57,7 @@ const messageHandler = (event: Event) => {
         return Message.Mentors.noUnderstand(event.user);
       }
     } else {
-      const session = db.getSession(event.user);
+      const session = await db.getSession(event.user);
       if (session != null) {
         if (isActive(session)) {
           return Message.Mentee.noUnderstand(session);

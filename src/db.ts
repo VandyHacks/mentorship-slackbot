@@ -1,9 +1,6 @@
-/* eslint-disable @typescript-eslint/ban-ts-ignore */
-// import low from "lowdb";
-import { ObjectID, DBRef } from 'mongodb';
-// import FileSync from "lowdb/adapters/FileSync";
 import {
   Session,
+  ClaimedSession,
   UserID,
   TS,
   Mentor,
@@ -18,7 +15,7 @@ import DB from 'mongo';
 //   db.set("sessions", {}).write();
 // }
 
-export default class Store {
+class Store {
   online: number
   created: number
   public constructor() {
@@ -39,29 +36,27 @@ export default class Store {
     return sessions.find({ id: user }).toArray()
   }
 
-  public async getSessionsToBump(): Promise<Session[]> {
+  public async getSessionsToBump(): Promise<ActiveSession[]> {
     let sessions = await this.SlackSessions()
     // @ts-ignore
-    let all = sessions.find({}).toArray()
-      .filter(
-        (session: Session) =>
-          isActive(session) &&
-          !isClaimed(session) &&
-          new Date(session.last_updated).getTime() <
-          new Date().getTime() - 1000 * 60 * 10
-      )
-      .toArray() as ActiveSession[];
-    for (const session of filtered) {
-      session.
-        // @ts-ignore
-        .get(session.id)
-        .set("last_updated", new Date().toString())
-        .write();
-    }
-    return sessions;
+    let all = await sessions.find({}).toArray()
+    let filtered = all.filter(
+      (session: Session) =>
+        isActive(session) &&
+        !isClaimed(session) &&
+        new Date(session.last_updated).getTime() <
+        new Date().getTime() - 1000 * 60 * 10
+    ) as ActiveSession[]
+    sessions.updateMany({ _id: { $in: filtered.map(e => e.id) } },
+      {
+        $set: {
+          "last_updated": new Date().toString()
+        }
+      })
+    return sessions.find({ _id: { $in: filtered.map(e => e.id) } }).toArray() as Promise<ActiveSession[]>;
   }
 
-  public async async updateSession<T extends Partial<Session>>(
+  public async updateSession<T extends Partial<Session>>(
     user: UserID,
     newSession: T
   ): Promise<Session & T> {
@@ -72,13 +67,13 @@ export default class Store {
       last_updated: new Date().toString()
     }
     // findOneAndUpdate returns back doc
-    return await sessions.findOneAndUpdate(
+    return sessions.findOneAndUpdate(
       { id: user },
       { $set: newData },
       { returnOriginal: false }) as Promise<Session & T>
   }
 
-  public async clearSession(user: UserID): Promise<void> {
+  public async clearSession(user: UserID): Promise<Session> {
     const sessions = await this.SlackSessions()
     const reset = {
       ts: undefined,
@@ -86,7 +81,7 @@ export default class Store {
       mentor_claim_ts: undefined,
       group_id: undefined
     }
-    sessions.updateOne({ id: user }, { $set: reset })
+    return sessions.findOneAndUpdate({ id: user }, { $set: reset }, { returnOriginal: true }) as Promise<Session>
   }
 
   public async getUserIdByThreadTs(threadTs: TS): Promise<UserID | undefined> {
@@ -95,16 +90,18 @@ export default class Store {
     return users.length > 0 ? users[0].id : undefined
   }
 
-  public async getMentors = () => {
+  public getMentors = async () => {
     const mentors = await this.SlackMentors()
     return mentors.find({}).toArray();
   }
 
-  public async setMentors = (mentors: { [key: string]: Mentor }) =>
+  public setMentors = async (mentorsData: { [key: string]: Mentor }) => {
     // uhhhh
-    db.set("mentors", mentors).write();
-
-  public async getMentor = (user: UserID): Promise<Mentor | null> => {
+    const mentors = await this.SlackMentors()
+    mentors.deleteMany({})
+    mentors.insertMany(Object.values(mentorsData));
+  }
+  public getMentor = async (user: UserID): Promise<Mentor | null> => {
     const mentors = await this.SlackMentors()
     return mentors.findOne({ id: user });
   }
@@ -116,11 +113,7 @@ export default class Store {
     }
   ) {
     const mentors = await this.SlackMentors()
-    return mentors
-      // @ts-ignore
-      .get(user)
-      .set("skills", skills)
-      .write();
+    return mentors.findOneAndUpdate({ _id: user }, { skills: skills })
   }
 
   public getOnline = () => this.online
@@ -128,3 +121,5 @@ export default class Store {
   public getCreated = () => this.created
   public bumpCreated = () => this.created += 1
 }
+const db = new Store()
+export default db;

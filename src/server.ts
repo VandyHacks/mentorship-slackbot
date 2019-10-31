@@ -16,8 +16,9 @@ import * as timed from "actions/timed";
 const port = process.env.PORT || 3000;
 
 const app = express();
+console.log(process.env.NODE_ENV)
 
-app.get("/auth", function(req, res) {
+app.get("/auth", function (req, res) {
   if (!req.query.code) {
     // access denied
     return;
@@ -29,7 +30,7 @@ app.get("/auth", function(req, res) {
       code: req.query.code
     }
   };
-  request.post("https://slack.com/api/oauth.access", data, function(
+  request.post("https://slack.com/api/oauth.access", data, function (
     error,
     response,
     body

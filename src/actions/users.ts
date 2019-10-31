@@ -1,7 +1,7 @@
 import Config from "config";
 
 import { webClient } from "clients";
-import * as db from "db";
+import db from "db";
 import { handle } from "utils";
 
 import { runnable } from "date";
@@ -16,7 +16,7 @@ interface Member {
   name: string;
 }
 
-const tryWelcome = (
+const tryWelcome = async (
   member: Member,
   session: Session,
   mentorChannelIds: Set<UserID>,
@@ -24,7 +24,7 @@ const tryWelcome = (
 ) => {
   if (!session.welcomed && (canWelcome || mentorChannelIds.has(member.id))) {
     return Message.Mentee.welcome(
-      db.updateSession(member.id, {
+      await db.updateSession(member.id, {
         welcomed: true
       })
     );
@@ -33,18 +33,18 @@ const tryWelcome = (
 };
 
 // tries to add a member to our index
-export const tryAdd = (
+export const tryAdd = async (
   member: Member,
   mentorChannelIds: Set<UserID>,
   canWelcome: boolean
 ) => {
-  const session = db.getSession(member.id);
+  const session = await db.getSession(member.id);
   if (!member.is_bot && session == null) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return webClient.im.open({ user: member.id }).then(({ channel }: any) => {
+    return webClient.im.open({ user: member.id }).then(async ({ channel }: any) => {
       return tryWelcome(
         member,
-        db.updateSession(member.id, {
+        await db.updateSession(member.id, {
           id: member.id,
           channel: channel.id,
           name: member.name,

@@ -18,18 +18,20 @@ import DB from 'mongo';
 class Store {
   online: number
   created: number
+  db: DB
   public constructor() {
     // just stored in memory
     this.created = 0
     this.online = 0
+    this.db = new DB();
   }
   // connects once
   public async SlackSessions() {
-    return (await new DB().collections).SlackSessions
+    return (await this.db.collections).SlackSessions
   }
 
   public async SlackMentors() {
-    return (await new DB().collections).SlackMentors
+    return (await this.db.collections).SlackMentors
   }
 
   public async getSession(user: UserID): Promise<Session> {

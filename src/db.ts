@@ -24,11 +24,13 @@ class Store {
     this.online = 0
   }
   // connects once
-  SlackSessions = async () =>
-    (await new DB().collections).SlackSessions
+  public async SlackSessions() {
+    return (await new DB().collections).SlackSessions
+  }
 
-  SlackMentors = async () =>
-    (await new DB().collections).SlackMentors
+  public async SlackMentors() {
+    return (await new DB().collections).SlackMentors
+  }
 
   public async getSession(user: UserID): Promise<Session> {
     const sessions = await this.SlackSessions()

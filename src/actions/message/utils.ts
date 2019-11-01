@@ -10,6 +10,9 @@ import { Session, ClaimedSession } from "typings";
 import { webClient } from "clients";
 import db from "db";
 
+
+// (async () => console.warn('doob' + JSON.stringify(await db.getSession('asdf'))))()
+
 const { chat } = webClient;
 
 export type RequestContext =

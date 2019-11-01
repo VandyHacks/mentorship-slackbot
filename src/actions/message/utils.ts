@@ -135,7 +135,7 @@ export async function buildRequestBlock(
 ) {
   const actions = buildRequestActions(session, context);
   let mentors: string[] = [];
-  if (context == null && session.submission.skill != null) {
+  if (context == null && session.submission && session.submission.skill != null) {
     const allMentors = await db.getMentors();
     mentors = Object.keys(allMentors).filter(
       m => allMentors[m].skills[session.submission.skill] === true

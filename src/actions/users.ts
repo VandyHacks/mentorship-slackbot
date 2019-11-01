@@ -60,8 +60,8 @@ export const tryAdd = async (
   return Promise.resolve(null);
 };
 
-const updateMentors = (members: Member[], mentorChannelIds: Set<UserID>) => {
-  const existingMentors = db.getMentors();
+const updateMentors = async (members: Member[], mentorChannelIds: Set<UserID>) => {
+  const existingMentors = await db.getMentors();
   const mentors = {};
   for (const member of members) {
     if (mentorChannelIds.has(member.id)) {
@@ -70,7 +70,7 @@ const updateMentors = (members: Member[], mentorChannelIds: Set<UserID>) => {
       };
     }
   }
-  db.setMentors(mentors);
+  await db.setMentors(mentors);
   return Promise.all(
     Object.keys(mentors).map(user => webClient.users.getPresence({ user }))
   )

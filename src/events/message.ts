@@ -30,7 +30,7 @@ const messageHandler = async (event: Event) => {
 
   // We only handle DM's
   if (event.channel_type === "im") {
-    const mentor = db.getMentor(event.user);
+    const mentor = await db.getMentor(event.user);
     if (mentor != null) {
       const text = event.text.trim();
       if (text.indexOf("!skills") === 0) {

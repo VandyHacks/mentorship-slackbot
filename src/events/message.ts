@@ -18,7 +18,7 @@ interface Event {
   text: string;
   user: UserID;
 }
-const messageHandler = async (event: Event) => {
+const messageHandler = async (event: Event): Promise<any> => {
   // ignore bot messages
   if (
     event.bot_id != null ||
@@ -48,7 +48,7 @@ const messageHandler = async (event: Event) => {
               skillsObj[part] = true;
             }
           }
-          db.setMentorSkills(event.user, skillsObj);
+          await db.setMentorSkills(event.user, skillsObj);
           return Message.Mentors.skillsSet(event.user, Object.keys(skillsObj));
         }
       } else if (text === "!stats") {

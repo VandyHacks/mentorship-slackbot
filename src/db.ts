@@ -127,7 +127,7 @@ class Store {
     }
   ) => {
     const mentors = await getSlackMentors()
-    return await mentors.findOneAndUpdate({ _id: user }, { skills: skills })
+    return await mentors.findOneAndUpdate({ _id: user }, { skills: skills }, { upsert: true })
   }
 
   getOnline = () => this.online

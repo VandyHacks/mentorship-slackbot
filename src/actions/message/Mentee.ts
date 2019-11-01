@@ -37,7 +37,7 @@ export async function updateRequest(
 }
 
 export function welcome(session: Session) {
-  return
+  // return
   const text = `Hi <@${session.id}>, welcome to ${Config.EVENT_NAME}! :wave:
 
   I’m Mentorship Bot, here to help you

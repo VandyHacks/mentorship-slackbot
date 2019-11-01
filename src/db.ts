@@ -36,13 +36,15 @@ class Store {
 
   public async getSession(user: UserID): Promise<Session> {
     const sessions = await this.getSlackSessions()
-    // @ts-ignore
-    return sessions.find({ id: user }).toArray()
+    const session = await sessions.findOne({ id: user })
+    if (!session) {
+      throw Error(`Session not found for userID=${user}`)
+    }
+    return session
   }
 
   public async getSessionsToBump(): Promise<ActiveSession[]> {
     let sessions = await this.getSlackSessions()
-    // @ts-ignore
     let all = await sessions.find({}).toArray()
     let filtered = all.filter(
       (session: Session) =>

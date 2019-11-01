@@ -22,21 +22,21 @@ const { MENTOR_CHANNEL } = Config;
 // === Mentors Channel ===
 // =======================
 
-export function sendRequest(session: RequestSession) {
-  return send({
+export async function sendRequest(session: RequestSession) {
+  return await send({
     channel: MENTOR_CHANNEL,
-    ...buildRequestBlock(session)
+    ...(await buildRequestBlock(session))
   });
 }
 
-export function updateRequest(
+export async function updateRequest(
   session: RequestSession & Pick<ActiveSession, "ts">,
   context: RequestContext = null
 ) {
-  return update({
+  return await update({
     channel: MENTOR_CHANNEL,
     ts: session.ts,
-    ...buildRequestBlock(session, context)
+    ...(await buildRequestBlock(session, context))
   });
 }
 
@@ -51,7 +51,7 @@ export function bump(session: ActiveSession) {
         session.submission.skill != null
           ? ` regarding ${session.submission.skill}`
           : ""
-      }> has not received any attention recently. Please take a look!`;
+        }> has not received any attention recently. Please take a look!`;
 
       return send({
         channel: MENTOR_CHANNEL,
@@ -72,7 +72,7 @@ export function surrenderBump(session: ActiveSession) {
         session.submission.skill != null
           ? ` regarding ${session.submission.skill}`
           : ""
-      }> *was surrendered*. Someone please take a look!`;
+        }> *was surrendered*. Someone please take a look!`;
       return send({
         channel: MENTOR_CHANNEL,
         ...buildSimpleBlock(text),

@@ -25,14 +25,14 @@ const requestActionBlock = {
   ]
 };
 
-export function updateRequest(
+export async function updateRequest(
   session: RequestSession & Pick<ClaimedSession, "mentee_ts">,
   context: RequestContext = "mentee"
 ) {
-  return update({
+  return await update({
     channel: session.channel,
     ts: session.mentee_ts,
-    ...buildRequestBlock(session, context)
+    ...(await buildRequestBlock(session, context))
   });
 }
 

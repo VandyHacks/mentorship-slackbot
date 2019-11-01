@@ -19,22 +19,22 @@ class Store {
   online: number
   created: number
   db: DB
-  public constructor() {
+  constructor() {
     // just stored in memory
     this.created = 0
     this.online = 0
     this.db = new DB();
   }
   // connects once
-  public async getSlackSessions() {
+  getSlackSessions = async () => {
     return (await this.db.collections).SlackSessions
   }
 
-  public async getSlackMentors() {
+  getSlackMentors = async () => {
     return (await this.db.collections).SlackMentors
   }
 
-  public async getSession(user: UserID): Promise<Session> {
+  getSession = async (user: UserID): Promise<Session> => {
     const sessions = await this.getSlackSessions()
     const session = await sessions.findOne({ id: user })
     if (!session) {
@@ -43,7 +43,7 @@ class Store {
     return session
   }
 
-  public async getSessionsToBump(): Promise<ActiveSession[]> {
+  getSessionsToBump = async (): Promise<ActiveSession[]> => {
     let sessions = await this.getSlackSessions()
     let all = await sessions.find({}).toArray()
     let filtered = all.filter(
@@ -62,7 +62,7 @@ class Store {
     return await sessions.find({ _id: { $in: filtered.map(e => e.id) } }).toArray() as ActiveSession[];
   }
 
-  public async updateSession<T extends Partial<Session>>(
+  async updateSession<T extends Partial<Session>>(
     user: UserID,
     newSession: T
   ): Promise<Session & T> {
@@ -79,7 +79,7 @@ class Store {
       { returnOriginal: false }) as Promise<Session & T>
   }
 
-  public async clearSession(user: UserID): Promise<Session> {
+  clearSession = async (user: UserID): Promise<Session> => {
     const sessions = await this.getSlackSessions()
     const reset = {
       ts: undefined,
@@ -90,42 +90,42 @@ class Store {
     return await sessions.findOneAndUpdate({ id: user }, { $set: reset }, { returnOriginal: true }) as Promise<Session>
   }
 
-  public async getUserIdByThreadTs(threadTs: TS): Promise<UserID | undefined> {
+  getUserIdByThreadTs = async (threadTs: TS): Promise<UserID | undefined> => {
     const sessions = await this.getSlackSessions()
     const users = await sessions.find({ ts: threadTs }).toArray()
     return users.length > 0 ? users[0].id : undefined
   }
 
-  public getMentors = async () => {
+  getMentors = async () => {
     const mentors = await this.getSlackMentors()
     return await mentors.find({}).toArray();
   }
 
-  public setMentors = async (mentorsData: { [key: string]: Mentor }) => {
+  setMentors = async (mentorsData: { [key: string]: Mentor }) => {
     // uhhhh
     const mentors = await this.getSlackMentors()
     mentors.deleteMany({})
     mentors.insertMany(Object.values(mentorsData));
   }
-  public getMentor = async (user: UserID): Promise<Mentor | null> => {
+  getMentor = async (user: UserID): Promise<Mentor | null> => {
     const mentors = await this.getSlackMentors()
     return await mentors.findOne({ id: user });
   }
 
-  public async setMentorSkills(
+  setMentorSkills = async (
     user: UserID,
     skills: {
       [key: string]: boolean;
     }
-  ) {
+  ) => {
     const mentors = await this.getSlackMentors()
     return await mentors.findOneAndUpdate({ _id: user }, { skills: skills })
   }
 
-  public getOnline = () => this.online
-  public setOnline = (count: number) => this.online = count
-  public getCreated = () => this.created
-  public bumpCreated = () => this.created += 1
+  getOnline = () => this.online
+  setOnline = (count: number) => this.online = count
+  getCreated = () => this.created
+  bumpCreated = () => this.created += 1
 }
 const db = new Store()
 export default db;

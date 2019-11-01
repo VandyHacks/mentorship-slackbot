@@ -42,7 +42,7 @@ export const tryAdd = async (
   if (!member.is_bot && session == null) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return webClient.im.open({ user: member.id }).then(async ({ channel }: any) => {
-      return tryWelcome(
+      return await tryWelcome(
         member,
         await db.updateSession(member.id, {
           id: member.id,
@@ -55,7 +55,7 @@ export const tryAdd = async (
       );
     });
   } else if (session != null) {
-    return tryWelcome(member, session, mentorChannelIds, canWelcome);
+    return await tryWelcome(member, session, mentorChannelIds, canWelcome);
   }
   return Promise.resolve(null);
 };
@@ -118,9 +118,9 @@ export const rescan = handle(() => {
       });
   };
   return Promise.all([getAll(), getMembers(Config.MENTOR_CHANNEL)]).then(
-    ([members, _mentorChannelIds]) => {
+    async ([members, _mentorChannelIds]) => {
       const mentorChannelIds = new Set(_mentorChannelIds);
-      updateMentors(members, mentorChannelIds);
+      await updateMentors(members, mentorChannelIds);
       const canWelcome = runnable();
       members.forEach(member => tryAdd(member, mentorChannelIds, canWelcome));
     }

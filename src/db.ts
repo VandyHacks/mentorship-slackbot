@@ -61,7 +61,7 @@ class Store {
         new Date(session.last_updated).getTime() <
         new Date().getTime() - 1000 * 60 * 10
     ) as ActiveSession[]
-    sessions.updateMany({ _id: { $in: filtered.map(e => e.id) } },
+    await sessions.updateMany({ _id: { $in: filtered.map(e => e.id) } },
       {
         $set: {
           "last_updated": new Date().toString()
@@ -84,7 +84,7 @@ class Store {
     return await sessions.findOneAndUpdate(
       { id: user },
       { $set: newData },
-      { returnOriginal: false }) as Promise<Session & T>
+      { returnOriginal: false, upsert: true }) as Promise<Session & T>
   }
 
   clearSession = async (user: UserID): Promise<Session> => {

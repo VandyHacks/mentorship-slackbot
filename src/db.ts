@@ -59,7 +59,7 @@ class Store {
           "last_updated": new Date().toString()
         }
       })
-    return sessions.find({ _id: { $in: filtered.map(e => e.id) } }).toArray() as Promise<ActiveSession[]>;
+    return await sessions.find({ _id: { $in: filtered.map(e => e.id) } }).toArray() as ActiveSession[];
   }
 
   public async updateSession<T extends Partial<Session>>(
@@ -73,7 +73,7 @@ class Store {
       last_updated: new Date().toString()
     }
     // findOneAndUpdate returns back doc
-    return sessions.findOneAndUpdate(
+    return await sessions.findOneAndUpdate(
       { id: user },
       { $set: newData },
       { returnOriginal: false }) as Promise<Session & T>
@@ -87,7 +87,7 @@ class Store {
       mentor_claim_ts: undefined,
       group_id: undefined
     }
-    return sessions.findOneAndUpdate({ id: user }, { $set: reset }, { returnOriginal: true }) as Promise<Session>
+    return await sessions.findOneAndUpdate({ id: user }, { $set: reset }, { returnOriginal: true }) as Promise<Session>
   }
 
   public async getUserIdByThreadTs(threadTs: TS): Promise<UserID | undefined> {
@@ -98,7 +98,7 @@ class Store {
 
   public getMentors = async () => {
     const mentors = await this.getSlackMentors()
-    return mentors.find({}).toArray();
+    return await mentors.find({}).toArray();
   }
 
   public setMentors = async (mentorsData: { [key: string]: Mentor }) => {
@@ -109,7 +109,7 @@ class Store {
   }
   public getMentor = async (user: UserID): Promise<Mentor | null> => {
     const mentors = await this.getSlackMentors()
-    return mentors.findOne({ id: user });
+    return await mentors.findOne({ id: user });
   }
 
   public async setMentorSkills(
@@ -119,7 +119,7 @@ class Store {
     }
   ) {
     const mentors = await this.getSlackMentors()
-    return mentors.findOneAndUpdate({ _id: user }, { skills: skills })
+    return await mentors.findOneAndUpdate({ _id: user }, { skills: skills })
   }
 
   public getOnline = () => this.online
